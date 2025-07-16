@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Hospital Billing Auto-Discount (Full Version with Reapply and Animation)
+// @name         Hospital Billing Auto-Discount (Compact + Animated)
 // @namespace    http://tampermonkey.net/
-// @version      2.1
-// @description  Smart discount panel with imaging cap, animation, and auto-reapply
+// @version      2.2
+// @description  Compact and animated discount panel for hospital billing
 // @match        http://115.127.77.187:8080/*
 // @grant        none
 // ==/UserScript==
@@ -20,45 +20,50 @@
     };
 
     const imagingTests = ["x-ray", "usg", "echo"];
-    let lastSelectedPercent = null; // Stores last selected discount %
+    let lastSelectedPercent = null;
 
     function getSuffix(id) {
         const parts = id.split("_");
         return parts.length > 1 ? parts[1] : null;
     }
 
-function applyDiscount(selectedPercent) {
-    lastSelectedPercent = selectedPercent;
+    function applyDiscount(selectedPercent) {
+        lastSelectedPercent = selectedPercent;
 
-    const testFields = document.querySelectorAll('input[name="f04"]');
-    let totalDiscount = 0;
+        const testFields = document.querySelectorAll('input[name="f04"]');
+        let totalDiscount = 0;
 
-    const includeImaging = document.querySelector('#include-imaging-checkbox')?.checked;
-    const imagingCapInput = document.querySelector('#imaging-cap-input');
-    let manualCap = parseFloat(imagingCapInput?.value);
-    if (isNaN(manualCap)) manualCap = null;
+        const imagingCapInput = document.querySelector('#imaging-cap-input');
+        let manualCap = parseFloat(imagingCapInput?.value);
+        if (isNaN(manualCap)) manualCap = null;
 
-    testFields.forEach(testInput => {
-        const testName = testInput.value.trim().toLowerCase();
-        if (!testName) return;
+        testFields.forEach(testInput => {
+            const testName = testInput.value.trim().toLowerCase();
+            if (!testName) return;
 
-        const suffix = getSuffix(testInput.id);
-        if (!suffix) return;
+            const suffix = getSuffix(testInput.id);
+            if (!suffix) return;
 
-        const rateInput = document.querySelector(`#f07_${suffix}`);
-        if (!rateInput) return;
+            const rateInput = document.querySelector(`#f07_${suffix}`);
+            if (!rateInput) return;
 
-        const rate = parseFloat(rateInput.value);
-        if (isNaN(rate) || rate <= 0) return;
+            const rate = parseFloat(rateInput.value);
+            if (isNaN(rate) || rate <= 0) return;
 
-        const isImaging = imagingTests.some(keyword => testName.includes(keyword));
-        let allowedPercent = 0;
+            const isImaging = imagingTests.some(keyword => testName.includes(keyword));
+            let allowedPercent = 0;
 
-        if (isImaging) {
-            if (includeImaging) {
-                allowedPercent = selectedPercent;
-            } else if (manualCap !== null) {
-                allowedPercent = manualCap;
+            if (isImaging) {
+                if (manualCap !== null) {
+                    allowedPercent = manualCap;
+                } else {
+                    for (const key in discountRules) {
+                        if (testName.includes(key)) {
+                            allowedPercent = discountRules[key];
+                            break;
+                        }
+                    }
+                }
             } else {
                 for (const key in discountRules) {
                     if (testName.includes(key)) {
@@ -67,203 +72,180 @@ function applyDiscount(selectedPercent) {
                     }
                 }
             }
-        } else {
-            for (const key in discountRules) {
-                if (testName.includes(key)) {
-                    allowedPercent = discountRules[key];
-                    break;
-                }
-            }
-        }
 
-        const finalPercent = Math.min(selectedPercent, allowedPercent);
-        const discount = (rate * finalPercent) / 100;
-        totalDiscount += discount;
-    });
-
-    let roundedDiscount = Math.ceil(totalDiscount / 10) * 10;
-
-    const discountField = document.querySelector('#P423_LUMSUM');
-    if (discountField) {
-        // Set initial discount
-        discountField.value = roundedDiscount;
-
-        // Trigger initial update
-        const changeEvent = new Event('change', { bubbles: true });
-        discountField.dispatchEvent(changeEvent);
-
-        const enterEvent = new KeyboardEvent('keydown', {
-            bubbles: true,
-            cancelable: true,
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13
+            const finalPercent = Math.min(selectedPercent, allowedPercent);
+            const discount = (rate * finalPercent) / 100;
+            totalDiscount += discount;
         });
-        discountField.dispatchEvent(enterEvent);
 
-        // Wait a moment for the payable field to update
-        setTimeout(() => {
-            const payableField = document.querySelector('#P423_PAYABLE');
-            if (payableField) {
-                const payableValue = parseFloat(payableField.value);
-                if (!isNaN(payableValue)) {
-                    const remainder = payableValue % 10;
-                    if (remainder !== 0) {
-                        // Add remainder to discount
-                        roundedDiscount += remainder;
-                        discountField.value = roundedDiscount;
+        let roundedDiscount = Math.ceil(totalDiscount / 10) * 10;
 
-                        // Re-trigger change and Enter
-                        discountField.dispatchEvent(new Event('change', { bubbles: true }));
-                        discountField.dispatchEvent(new KeyboardEvent('keydown', {
-                            bubbles: true,
-                            cancelable: true,
-                            key: 'Enter',
-                            code: 'Enter',
-                            keyCode: 13,
-                            which: 13
-                        }));
+        const discountField = document.querySelector('#P423_LUMSUM');
+        if (discountField) {
+            discountField.value = roundedDiscount;
+            discountField.dispatchEvent(new Event('change', { bubbles: true }));
+            discountField.dispatchEvent(new KeyboardEvent('keydown', {
+                bubbles: true,
+                cancelable: true,
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13
+            }));
+
+            setTimeout(() => {
+                const payableField = document.querySelector('#P423_PAYABLE');
+                if (payableField) {
+                    const payableValue = parseFloat(payableField.value);
+                    if (!isNaN(payableValue)) {
+                        const remainder = payableValue % 10;
+                        if (remainder !== 0) {
+                            roundedDiscount += remainder;
+                            discountField.value = roundedDiscount;
+                            discountField.dispatchEvent(new Event('change', { bubbles: true }));
+                            discountField.dispatchEvent(new KeyboardEvent('keydown', {
+                                bubbles: true,
+                                cancelable: true,
+                                key: 'Enter',
+                                code: 'Enter',
+                                keyCode: 13,
+                                which: 13
+                            }));
+                        }
                     }
                 }
-            }
-        }, 300); // wait 300ms for payable to update
+            }, 300);
+        }
+
+        const remarkField = document.querySelector('#P423_INV_REMARK');
+        if (remarkField) remarkField.value = `DISCOUNT BY DR (${selectedPercent}%)`;
     }
 
-    const remarkField = document.querySelector('#P423_INV_REMARK');
-    if (remarkField) remarkField.value = `DISCOUNT BY DR (${selectedPercent}%)`;
-}
+    function createFloatingPanel() {
+        const panel = document.createElement('div');
+        panel.id = 'floating-discount-panel';
 
-function createFloatingPanel() {
-    const panel = document.createElement('div');
-    panel.id = 'floating-discount-panel';
-
-    // Basic style
-    Object.assign(panel.style, {
-        position: 'fixed',
-        bottom: '20px',
-        right: '20px',
-        background: '#f9f9f9',
-        border: '1px solid #999',
-        borderRadius: '8px',
-        padding: '10px',
-        boxShadow: '0 0 10px rgba(0,0,0,0.2)',
-        zIndex: '9999',
-        fontFamily: 'Arial, sans-serif',
-        width: '170px',
-        transition: 'all 0.3s ease',
-        transform: 'translate(0, 0)',
-    });
-
-    panel.innerHTML = `
-        <div id="discount-panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; cursor: move;">
-            <strong style="font-size: 14px;">Discount</strong>
-            <button id="toggle-panel" title="Minimize" style="
-                background: none;
-                border: none;
-                font-size: 16px;
-                width: 20px;
-                height: 20px;
-                padding: 0;
-                margin: 0;
-                cursor: pointer;
-            ">⚊</button>
-        </div>
-
-        <div id="discount-buttons" style="transition: all 0.3s ease; overflow: hidden;">
-            <button data-rate="15">15%</button><br>
-            <button data-rate="20">20%</button><br>
-            <button data-rate="25">25%</button><br>
-            <button data-rate="30">30%</button><br>
-            <button data-rate="40">40%</button><br>
-            <button id="manual-btn">Manual</button><br><br>
-
-            <div style="font-size: 12px;">
-                Imaging cap:
-                <input type="number" id="imaging-cap-input" value="20" step="5" style="width: 50px; font-size: 11px; padding: 1px; text-align: right;">%
-            </div>
-        </div>
-    `;
-
-    document.body.appendChild(panel);
-
-    // Style buttons
-    panel.querySelectorAll('#discount-buttons button').forEach(btn => {
-        btn.style.margin = '4px 0';
-        btn.style.width = '100%';
-        btn.style.cursor = 'pointer';
-    });
-
-    // % Buttons
-    panel.querySelectorAll('button[data-rate]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const rate = parseFloat(btn.getAttribute('data-rate'));
-            applyDiscount(rate);
+        Object.assign(panel.style, {
+            position: 'fixed',
+            bottom: '15px',
+            right: '15px',
+            background: '#fff',
+            border: '1px solid #ccc',
+            borderRadius: '6px',
+            padding: '6px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            zIndex: '9999',
+            fontFamily: 'Segoe UI, sans-serif',
+            width: '120px',
+            fontSize: '11px',
+            transform: 'translate(0, 0)',
+            transition: 'transform 0.2s ease, opacity 0.2s ease'
         });
-    });
 
-    // Manual % button
-    panel.querySelector('#manual-btn').addEventListener('click', () => {
-        const custom = prompt("Enter custom discount percentage:");
-        const rate = parseFloat(custom);
-        if (!isNaN(rate)) applyDiscount(rate);
-    });
+        panel.innerHTML = `
+            <div id="discount-panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; cursor: move;">
+                <strong style="font-size: 12px;">Discount</strong>
+                <button id="toggle-panel" title="Minimize" style="background: none; border: none; font-size: 13px; cursor: pointer;">⚊</button>
+            </div>
+            <div id="discount-buttons" style="transition: all 0.2s ease-in-out;">
+                <div style="display: flex; flex-direction: column; gap: 3px;">
+                    <button data-rate="15">15%</button>
+                    <button data-rate="20">20%</button>
+                    <button data-rate="25">25%</button>
+                    <button data-rate="30">30%</button>
+                    <button data-rate="40">40%</button>
+                    <button id="manual-btn">Manual</button>
+                </div>
+                <div style="margin-top: 5px;">
+                    <label>Cap:
+                        <input type="number" id="imaging-cap-input" value="20" step="5" style="width: 36px; font-size: 10px; padding: 1px; text-align: right;">
+                        %
+                    </label>
+                </div>
+            </div>
+        `;
 
-    // Auto-update discount on imaging cap input change
-    const capInput = panel.querySelector('#imaging-cap-input');
-    capInput.addEventListener('change', () => {
-        if (lastSelectedPercent !== null) {
-            applyDiscount(lastSelectedPercent);
-        }
-    });
+        document.body.appendChild(panel);
 
-    // Minimize / Maximize panel
-    const toggleBtn = panel.querySelector('#toggle-panel');
-    const buttonSection = panel.querySelector('#discount-buttons');
-    toggleBtn.addEventListener('click', () => {
-        const isVisible = buttonSection.style.display !== 'none';
-        if (isVisible) {
-            buttonSection.style.opacity = '0';
-            setTimeout(() => {
-                buttonSection.style.display = 'none';
-                toggleBtn.textContent = '+';
-                toggleBtn.title = 'Maximize';
-            }, 300);
-        } else {
-            buttonSection.style.display = 'block';
-            buttonSection.style.opacity = '0';
-            setTimeout(() => {
-                buttonSection.style.opacity = '1';
-                toggleBtn.textContent = '⚊';
-                toggleBtn.title = 'Minimize';
-            }, 10);
-        }
-    });
+        panel.querySelectorAll('#discount-buttons button').forEach(btn => {
+            Object.assign(btn.style, {
+                padding: '3px',
+                fontSize: '10px',
+                width: '100%',
+                border: '1px solid #bbb',
+                borderRadius: '3px',
+                background: '#fafafa',
+                cursor: 'pointer',
+                transition: 'background 0.2s ease'
+            });
 
-    // 💡 Smooth dragging from header only
-    let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
+            btn.addEventListener('mouseenter', () => btn.style.background = '#eee');
+            btn.addEventListener('mouseleave', () => btn.style.background = '#fafafa');
+        });
 
-    const header = panel.querySelector('#discount-panel-header');
-    header.addEventListener('mousedown', (e) => {
-        isDragging = true;
-        startX = e.clientX - currentX;
-        startY = e.clientY - currentY;
-        document.body.style.userSelect = 'none';
-    });
+        panel.querySelectorAll('button[data-rate]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const rate = parseFloat(btn.getAttribute('data-rate'));
+                applyDiscount(rate);
+            });
+        });
 
-    document.addEventListener('mousemove', (e) => {
-        if (isDragging) {
-            currentX = e.clientX - startX;
-            currentY = e.clientY - startY;
-            panel.style.transform = `translate(${currentX}px, ${currentY}px)`;
-        }
-    });
+        panel.querySelector('#manual-btn').addEventListener('click', () => {
+            const custom = prompt("Enter custom discount percentage:");
+            const rate = parseFloat(custom);
+            if (!isNaN(rate)) applyDiscount(rate);
+        });
 
-    document.addEventListener('mouseup', () => {
-        isDragging = false;
-        document.body.style.userSelect = '';
-    });
-}
+        panel.querySelector('#imaging-cap-input').addEventListener('change', () => {
+            if (lastSelectedPercent !== null) applyDiscount(lastSelectedPercent);
+        });
+
+        const toggleBtn = panel.querySelector('#toggle-panel');
+        const buttonSection = panel.querySelector('#discount-buttons');
+        toggleBtn.addEventListener('click', () => {
+            const visible = buttonSection.style.display !== 'none';
+            if (visible) {
+                buttonSection.style.opacity = '0';
+                setTimeout(() => {
+                    buttonSection.style.display = 'none';
+                    toggleBtn.textContent = '+';
+                    toggleBtn.title = 'Maximize';
+                }, 200);
+            } else {
+                buttonSection.style.display = 'block';
+                buttonSection.style.opacity = '0';
+                setTimeout(() => {
+                    buttonSection.style.opacity = '1';
+                    toggleBtn.textContent = '⚊';
+                    toggleBtn.title = 'Minimize';
+                }, 10);
+            }
+        });
+
+        // Draggable logic from header
+        let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
+        const header = panel.querySelector('#discount-panel-header');
+
+        header.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            startX = e.clientX - currentX;
+            startY = e.clientY - currentY;
+            document.body.style.userSelect = 'none';
+        });
+
+        document.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                currentX = e.clientX - startX;
+                currentY = e.clientY - startY;
+                panel.style.transform = `translate(${currentX}px, ${currentY}px)`;
+            }
+        });
+
+        document.addEventListener('mouseup', () => {
+            isDragging = false;
+            document.body.style.userSelect = '';
+        });
+    }
 
     function waitForPage() {
         const discountField = document.querySelector('#P423_LUMSUM');
