@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Hospital Billing Auto-Discount (Compact + Animated)
+// @name         Hospital Billing Auto-Discount (Compact + Animated + Manual Input Toggle)
 // @namespace    http://tampermonkey.net/
-// @version      2.2
-// @description  Compact and animated discount panel for hospital billing
+// @version      3.0
+// @description  Compact and animated discount panel for hospital billing with custom and imaging cap inputs
 // @match        http://115.127.77.187:8080/*
 // @grant        none
 // ==/UserScript==
@@ -136,7 +136,7 @@
             boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
             zIndex: '9999',
             fontFamily: 'Segoe UI, sans-serif',
-            width: '120px',
+            width: '135px', // narrower panel
             fontSize: '11px',
             transform: 'translate(0, 0)',
             transition: 'transform 0.2s ease, opacity 0.2s ease'
@@ -154,13 +154,18 @@
                     <button data-rate="25">25%</button>
                     <button data-rate="30">30%</button>
                     <button data-rate="40">40%</button>
-                    <button id="manual-btn">Manual</button>
                 </div>
-                <div style="margin-top: 5px;">
-                    <label>Cap:
-                        <input type="number" id="imaging-cap-input" value="20" step="5" style="width: 36px; font-size: 10px; padding: 1px; text-align: right;">
-                        %
-                    </label>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px 0;">
+                    <label for="manual-input" style="font-size: 10px;">Custom</label>
+                    <input type="number" id="manual-input" step="5" value="20" style="width: 50px; font-size: 10px; padding: 2px; text-align: right; box-sizing: border-box;">
+                </div>
+                <hr style="margin: 4px 0; border: none; border-top: 2px solid #ccc;">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label for="imaging-cap-input" style="font-size: 10px;">Imaging</label>
+                    <input type="number" id="imaging-cap-input" step="5" value="20" style="width: 50px; font-size: 10px; padding: 2px; text-align: right; box-sizing: border-box;">
+                </div>
+                <div style="margin-top: 6px; padding: 4px; font-size: 9px; text-align: center; background: #f1f1f1; border: 1px solid #ccc; border-radius: 4px; color: #555;">
+                    shawmik7
                 </div>
             </div>
         `;
@@ -168,16 +173,13 @@
         document.body.appendChild(panel);
 
         panel.querySelectorAll('#discount-buttons button').forEach(btn => {
-            Object.assign(btn.style, {
-                padding: '3px',
-                fontSize: '10px',
-                width: '100%',
-                border: '1px solid #bbb',
-                borderRadius: '3px',
-                background: '#fafafa',
-                cursor: 'pointer',
-                transition: 'background 0.2s ease'
-            });
+            btn.style.padding = '3px';
+            btn.style.fontSize = '10px';
+            btn.style.width = '100%';
+            btn.style.border = '1px solid #bbb';
+            btn.style.borderRadius = '3px';
+            btn.style.background = '#fafafa';
+            btn.style.cursor = 'pointer';
 
             btn.addEventListener('mouseenter', () => btn.style.background = '#eee');
             btn.addEventListener('mouseleave', () => btn.style.background = '#fafafa');
@@ -190,13 +192,14 @@
             });
         });
 
-        panel.querySelector('#manual-btn').addEventListener('click', () => {
-            const custom = prompt("Enter custom discount percentage:");
-            const rate = parseFloat(custom);
+        const manualInput = panel.querySelector('#manual-input');
+        manualInput.addEventListener('input', () => {
+            const rate = parseFloat(manualInput.value);
             if (!isNaN(rate)) applyDiscount(rate);
         });
 
-        panel.querySelector('#imaging-cap-input').addEventListener('change', () => {
+        const imagingInput = panel.querySelector('#imaging-cap-input');
+        imagingInput.addEventListener('input', () => {
             if (lastSelectedPercent !== null) applyDiscount(lastSelectedPercent);
         });
 
@@ -222,7 +225,6 @@
             }
         });
 
-        // Draggable logic from header
         let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
         const header = panel.querySelector('#discount-panel-header');
 
