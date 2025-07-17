@@ -1,25 +1,36 @@
 // ==UserScript==
-// @name         Hospital Billing Auto-Discount (Compact + Animated + Manual Input Toggle)
+// @name         Discount Calculator
 // @namespace    http://tampermonkey.net/
 // @version      3.0
-// @description  Compact and animated discount panel for hospital billing with custom and imaging cap inputs
+// @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
 // @grant        none
+// @author       Sohanur Rahman Shawmik
 // ==/UserScript==
 
 (function () {
     'use strict';
 
     const discountRules = {
-        "cbc": 0,
-        "crp": 50,
-        "x-ray": 20,
-        "usg": 20,
-        "echo": 20,
-        "vacuette": 0
+        "vacuette": 0,
+        "blood  cbc": 0,
+        "dengue": 0,
+        "bone merrow": 0,
+        "bronchoscopy": 0,
+        "colposcopy": 0,
+        "pap-smear c. c": 0,
+        "cervical smear c.c": 0,
+        "volt smear c c": 0,
+        "h.v.s. for c/c": 0,
+        "collection charge for nipple swap": 0,
+        "x-ray": 50,
+        "usg": 50,
+        "echo": 50,
+        "e.e.g": 12,
+        "eeg": 12
     };
 
-    const imagingTests = ["x-ray", "usg", "echo"];
+    const imagingTests = ["x-ray", "usg", "echo", "e.c.g", ];
     let lastSelectedPercent = null;
 
     function getSuffix(id) {
