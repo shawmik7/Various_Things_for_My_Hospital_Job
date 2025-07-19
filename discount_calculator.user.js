@@ -32,7 +32,8 @@
         "e.e.g": 12,
         "eeg": 12,
         "urodynamics study": 5.55,
-        "uroflowmetry": 20
+        "uroflowmetry": 20,
+        "test_test_name": 0
     };
 
     const imagingTests = ["x-ray", "usg", "echo", "e.c.g", "e.e.g", "eeg"];
