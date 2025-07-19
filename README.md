@@ -6,4 +6,4 @@ This repository contains various scripts and other stuffs to make my job a littl
 ## How to install Tampermonkey scripts (Discount Calculator):
 1. First install Tampermonkey from the webstore.
 2. Visit the [raw url](https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator.user.js) of the "Discount Calculator" script (after installing Tampermonkey).
-3. A Tampermonkey script installer page should open. Just click **Install** or **Reinstall** or **Update** button. The script should now be installed in you Tampermonkey extension. 
+3. A Tampermonkey script installer page should open. Just click **Install** or **Reinstall** or **Update** button. The script should now be installed in your Tampermonkey extension. 
