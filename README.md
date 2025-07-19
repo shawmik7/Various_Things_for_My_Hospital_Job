@@ -1,2 +1,3 @@
-# Comfort-Hospital-Discount-Calculator
-This is a Tampermonkey script to automate the discount calculation
+# Various scripts and codes for Comfort Hospital Pvt. Ltd. cash counter job
+
+This repository contains various scripts and other stuffs to make my job a little bit easier. It's only for my job, nobody else might not get any benefits from this repo, so you can just ignore this repo...
