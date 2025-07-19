@@ -5,6 +5,7 @@
 // @version      3.0
 // @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
+// @match        http://192.168.1.1:8080/*
 // @grant        none
 // ==/UserScript==
 
@@ -27,7 +28,9 @@
         "usg": 50,
         "echo": 50,
         "e.e.g": 12,
-        "eeg": 12
+        "eeg": 12,
+        "urodynamics study": 5.55,
+        "uroflowmetry": 20
     };
 
     const imagingTests = ["x-ray", "usg", "echo", "e.c.g", "e.e.g", "eeg"];
