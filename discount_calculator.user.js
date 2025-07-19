@@ -2,7 +2,7 @@
 // @name         Discount Calculator
 // @author       Sohanur Rahman Shawmik
 // @namespace    https://github.com/shawmik7/
-// @version      3.1
+// @version      3.2
 // @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
 // @match        http://192.168.1.1:8080/*
@@ -32,8 +32,7 @@
         "e.e.g": 12,
         "eeg": 12,
         "urodynamics study": 5.55,
-        "uroflowmetry": 20,
-        "test_test_name": 0
+        "uroflowmetry": 20
     };
 
     const imagingTests = ["x-ray", "usg", "echo", "e.c.g", "e.e.g", "eeg"];
