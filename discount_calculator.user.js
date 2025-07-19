@@ -8,7 +8,7 @@
 // @match        http://192.168.1.1:8080/*
 // @grant        none
 // @updateURL    https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator.user.js
-// @downLoadURL  https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator.user.js
+// @downloadURL  https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator.user.js
 // ==/UserScript==
 
 (function () {
