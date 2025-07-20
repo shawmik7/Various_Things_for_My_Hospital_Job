@@ -2,7 +2,7 @@
 // @name         Discount Calculator
 // @author       Sohanur Rahman Shawmik
 // @namespace    https://github.com/shawmik7/
-// @version      3.2
+// @version      3.5
 // @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
 // @match        http://192.168.1.1:8080/*
@@ -113,112 +113,137 @@ function applyDiscount(selectedPercent) {
     if (remarkField) remarkField.value = `DISCOUNT BY DR (${selectedPercent}%)`;
 }
 
-
-
+    // Function that creates the floating panel
     function createFloatingPanel() {
         const panel = document.createElement('div');
         panel.id = 'floating-discount-panel';
 
+        // Load state from localStorage
+        const customStateKey = 'discountPanelCustomExpanded';
+        const panelStateKey = 'discountPanelCollapsed';
+        let isCustomOpen = localStorage.getItem(customStateKey) === 'true';
+        let panelCollapsed = localStorage.getItem(panelStateKey) === 'true';
+
+        // Panel Styling
         Object.assign(panel.style, {
             position: 'fixed',
-            bottom: '15px',
-            right: '15px',
-            background: '#fff',
+            bottom: '7px',
+            right: '7px',
+            background: '#fefefe',
             border: '1px solid #ccc',
-            borderRadius: '6px',
+            borderRadius: '7px',
             padding: '6px',
-            boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
+            boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
             zIndex: '9999',
             fontFamily: 'Segoe UI, sans-serif',
-            width: '135px', // narrower panel
+            width: '130px',
             fontSize: '11px',
             transform: 'translate(0, 0)',
-            transition: 'transform 0.2s ease, opacity 0.2s ease'
+            transition: 'transform 0.3s ease, opacity 0.3s ease'
         });
 
         panel.innerHTML = `
             <div id="discount-panel-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; cursor: move;">
                 <strong style="font-size: 12px;">Discount</strong>
-                <button id="toggle-panel" title="Minimize" style="background: none; border: none; font-size: 13px; cursor: pointer;">⚊</button>
+                <button id="toggle-panel" title="Minimize" style="background: none; border: none; font-size: 13px; cursor: pointer;">${panelCollapsed ? '+' : '⚊'}</button>
             </div>
-            <div id="discount-buttons" style="transition: all 0.2s ease-in-out;">
-                <div style="display: flex; flex-direction: column; gap: 3px;">
-                    <button data-rate="15">15%</button>
+            <div id="discount-buttons" style="transition: max-height 0.3s ease, opacity 0.3s ease; overflow: hidden; ${panelCollapsed ? 'max-height: 0; opacity: 0;' : 'max-height: 500px; opacity: 1;'}">
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin-bottom: 6px;">
                     <button data-rate="20">20%</button>
                     <button data-rate="25">25%</button>
                     <button data-rate="30">30%</button>
                     <button data-rate="40">40%</button>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin: 6px 0 4px 0;">
-                    <label for="manual-input" style="font-size: 10px;">Custom</label>
-                    <input type="number" id="manual-input" step="5" value="20" style="width: 50px; font-size: 10px; padding: 2px; text-align: right; box-sizing: border-box;">
+
+                <div id="custom-toggle" style="cursor: pointer; font-size: 10px; color: #007BFF; margin: 1px 0;">
+                    ${isCustomOpen ? '▼' : '►'} Custom
                 </div>
-                <hr style="margin: 4px 0; border: none; border-top: 2px solid #ccc;">
-                <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label for="imaging-cap-input" style="font-size: 10px;">Imaging</label>
-                    <input type="number" id="imaging-cap-input" step="5" value="20" style="width: 50px; font-size: 10px; padding: 2px; text-align: right; box-sizing: border-box;">
+
+                <div id="custom-section" style="
+                    overflow: hidden;
+                    transition: max-height 0.3s ease;
+                    max-height: ${isCustomOpen ? '200px' : '0'};
+                    display: flex;
+                    flex-direction: column;
+                    gap: 6px;
+                ">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="manual-input" style="font-size: 10px;">Custom</label>
+                        <input type="number" id="manual-input" step="5" value="20" style="width: 60px; font-size: 10px; padding: 2px; text-align: left;">
+                    </div>
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label for="imaging-cap-input" style="font-size: 10px;">Imaging</label>
+                        <input type="number" id="imaging-cap-input" step="5" value="20" style="width: 60px; font-size: 10px; padding: 2px; text-align: left;">
+                    </div>
                 </div>
+
                 <div style="margin-top: 6px; padding: 4px; font-size: 9px; text-align: center; background: #f1f1f1; border: 1px solid #ccc; border-radius: 4px; color: #555;">
-                    Developed by: <a href="https://github.com/shawmik7/" target="_blank">shawmik7</a>
+                    Developed by <a href="https://github.com/shawmik7" target="_blank">shawmik7</a>
                 </div>
             </div>
         `;
 
         document.body.appendChild(panel);
 
-        panel.querySelectorAll('#discount-buttons button').forEach(btn => {
-            btn.style.padding = '3px';
-            btn.style.fontSize = '10px';
-            btn.style.width = '100%';
-            btn.style.border = '1px solid #bbb';
-            btn.style.borderRadius = '3px';
-            btn.style.background = '#fafafa';
-            btn.style.cursor = 'pointer';
-
+        // Style and bind discount rate buttons
+        panel.querySelectorAll('button[data-rate]').forEach(btn => {
+            Object.assign(btn.style, {
+                padding: '3px',
+                fontSize: '10px',
+                border: '1px solid #bbb',
+                borderRadius: '3px',
+                background: '#fafafa',
+                cursor: 'pointer',
+                width: '100%'
+            });
             btn.addEventListener('mouseenter', () => btn.style.background = '#eee');
             btn.addEventListener('mouseleave', () => btn.style.background = '#fafafa');
-        });
-
-        panel.querySelectorAll('button[data-rate]').forEach(btn => {
             btn.addEventListener('click', () => {
                 const rate = parseFloat(btn.getAttribute('data-rate'));
                 applyDiscount(rate);
             });
         });
 
-        const manualInput = panel.querySelector('#manual-input');
-        manualInput.addEventListener('input', () => {
-            const rate = parseFloat(manualInput.value);
+        // Manual & Imaging input listeners
+        panel.querySelector('#manual-input').addEventListener('input', (e) => {
+            const rate = parseFloat(e.target.value);
             if (!isNaN(rate)) applyDiscount(rate);
         });
 
-        const imagingInput = panel.querySelector('#imaging-cap-input');
-        imagingInput.addEventListener('input', () => {
+        panel.querySelector('#imaging-cap-input').addEventListener('input', (e) => {
             if (lastSelectedPercent !== null) applyDiscount(lastSelectedPercent);
         });
 
+        // Toggle main panel collapse
         const toggleBtn = panel.querySelector('#toggle-panel');
         const buttonSection = panel.querySelector('#discount-buttons');
         toggleBtn.addEventListener('click', () => {
-            const visible = buttonSection.style.display !== 'none';
-            if (visible) {
+            panelCollapsed = !panelCollapsed;
+            localStorage.setItem(panelStateKey, panelCollapsed);
+            if (panelCollapsed) {
+                buttonSection.style.maxHeight = '0';
                 buttonSection.style.opacity = '0';
-                setTimeout(() => {
-                    buttonSection.style.display = 'none';
-                    toggleBtn.textContent = '+';
-                    toggleBtn.title = 'Maximize';
-                }, 200);
+                toggleBtn.textContent = '+';
+                toggleBtn.title = 'Maximize';
             } else {
-                buttonSection.style.display = 'block';
-                buttonSection.style.opacity = '0';
-                setTimeout(() => {
-                    buttonSection.style.opacity = '1';
-                    toggleBtn.textContent = '⚊';
-                    toggleBtn.title = 'Minimize';
-                }, 10);
+                buttonSection.style.maxHeight = '500px';
+                buttonSection.style.opacity = '1';
+                toggleBtn.textContent = '⚊';
+                toggleBtn.title = 'Minimize';
             }
         });
 
+        // Toggle "Custom Settings" section
+        const customToggle = panel.querySelector('#custom-toggle');
+        const customSection = panel.querySelector('#custom-section');
+        customToggle.addEventListener('click', () => {
+            isCustomOpen = !isCustomOpen;
+            localStorage.setItem(customStateKey, isCustomOpen);
+            customToggle.textContent = isCustomOpen ? '▼ Custom Settings' : '► Custom Settings';
+            customSection.style.maxHeight = isCustomOpen ? customSection.scrollHeight + 'px' : '0';
+        });
+
+        // Dragging logic
         let isDragging = false, startX = 0, startY = 0, currentX = 0, currentY = 0;
         const header = panel.querySelector('#discount-panel-header');
 
