@@ -136,7 +136,7 @@ function applyDiscount(selectedPercent) {
             boxShadow: '0 4px 10px rgba(0,0,0,0.1)',
             zIndex: '9999',
             fontFamily: 'Segoe UI, sans-serif',
-            width: '130px',
+            width: '135px',
             fontSize: '11px',
             transform: 'translate(0, 0)',
             transition: 'transform 0.3s ease, opacity 0.3s ease'
@@ -156,7 +156,7 @@ function applyDiscount(selectedPercent) {
                 </div>
 
                 <div id="custom-toggle" style="cursor: pointer; font-size: 10px; color: #007BFF; margin: 1px 0;">
-                    ${isCustomOpen ? '▼' : '►'} Custom
+                    ${isCustomOpen ? '▼' : '►'} Custom Settings
                 </div>
 
                 <div id="custom-section" style="
