@@ -2,7 +2,7 @@
 // @name         Discount Calculator
 // @author       Sohanur Rahman Shawmik
 // @namespace    https://github.com/shawmik7/
-// @version      3.6
+// @version      3.8
 // @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
 // @match        http://192.168.1.1:8080/*
@@ -43,75 +43,95 @@
         return parts.length > 1 ? parts[1] : null;
     }
 
-function applyDiscount(selectedPercent) {
-    lastSelectedPercent = selectedPercent;
+    function applyDiscount(selectedPercent) {
+        lastSelectedPercent = selectedPercent;
 
-    const testFields = document.querySelectorAll('input[name="f04"]');
-    let totalDiscount = 0;
-    let totalTestRate = 0;
+        const testFields = document.querySelectorAll('input[name="f04"]');
+        let totalDiscount = 0;
+        let totalTestRate = 0;
+        let zeroDiscountTests = [];
 
-    const imagingCapInput = document.querySelector('#imaging-cap-input');
-    let manualImagingCap = parseFloat(imagingCapInput?.value);
-    if (isNaN(manualImagingCap)) manualImagingCap = null;
+        const imagingCapInput = document.querySelector('#imaging-cap-input');
+        let manualImagingCap = parseFloat(imagingCapInput?.value);
+        if (isNaN(manualImagingCap)) manualImagingCap = null;
 
-    testFields.forEach(testInput => {
-        const testName = testInput.value.trim().toLowerCase();
-        if (!testName) return;
+        testFields.forEach(testInput => {
+            const testNameOriginal = testInput.value.trim();
+            const testName = testNameOriginal.toLowerCase();
+            if (!testName) return;
 
-        const suffix = getSuffix(testInput.id);
-        if (!suffix) return;
+            const suffix = getSuffix(testInput.id);
+            if (!suffix) return;
 
-        const rateInput = document.querySelector(`#f07_${suffix}`);
-        if (!rateInput) return;
+            const rateInput = document.querySelector(`#f07_${suffix}`);
+            if (!rateInput) return;
 
-        const rate = parseFloat(rateInput.value);
-        if (isNaN(rate) || rate <= 0) return;
+            const rate = parseFloat(rateInput.value);
+            if (isNaN(rate) || rate <= 0) return;
 
-        totalTestRate += rate;
+            totalTestRate += rate;
 
-        const isImaging = imagingTests.some(keyword => testName.includes(keyword));
-        let allowedPercent = selectedPercent;
+            const isImaging = imagingTests.some(keyword => testName.includes(keyword));
+            let allowedPercent = selectedPercent;
 
-        for (const key in discountRules) {
-            if (testName.includes(key)) {
-                allowedPercent = Math.min(allowedPercent, discountRules[key]);
-                break;
+            for (const key in discountRules) {
+                if (testName.includes(key)) {
+                    allowedPercent = Math.min(allowedPercent, discountRules[key]);
+                    break;
+                }
             }
+
+            if (isImaging && manualImagingCap !== null) {
+                allowedPercent = Math.min(allowedPercent, manualImagingCap);
+            }
+
+            if (allowedPercent === 0) {
+                for (const key in discountRules) {
+                    if (testName.includes(key)) {
+                        zeroDiscountTests.push(key.toUpperCase());
+                        break;
+                    }
+                }
+            }
+            const discount = (rate * allowedPercent) / 100;
+            totalDiscount += discount;
+        });
+
+        // Round and finalize discount
+        let rawPayable = totalTestRate - totalDiscount;
+        let payableRounded = Math.round(rawPayable);
+        let lastDigit = payableRounded % 10;
+        let extraDiscount = lastDigit === 0 ? 0 : lastDigit;
+        let finalDiscount = totalTestRate - (payableRounded - extraDiscount);
+
+        // Apply discount to discount field
+        const discountField = document.querySelector('#P423_LUMSUM');
+        if (discountField) {
+            discountField.value = finalDiscount;
+            discountField.dispatchEvent(new Event('change', { bubbles: true }));
+            discountField.dispatchEvent(new KeyboardEvent('keydown', {
+                bubbles: true,
+                cancelable: true,
+                key: 'Enter',
+                code: 'Enter',
+                keyCode: 13,
+                which: 13
+            }));
         }
 
-        if (isImaging && manualImagingCap !== null) {
-            allowedPercent = Math.min(allowedPercent, manualImagingCap);
+        // Build remark text
+        let remarkText = `DISCOUNT BY DR (${selectedPercent}%)`;
+        if (zeroDiscountTests.length > 0) {
+            const uniqueTests = [...new Set(zeroDiscountTests)];
+            remarkText += ` WITHOUT ${uniqueTests.join(', ')}`;
         }
 
-        const discount = (rate * allowedPercent) / 100;
-        totalDiscount += discount;
-    });
-
-    // Use totalTestRate to calculate final payable and round it
-    let rawPayable = totalTestRate - totalDiscount;
-    let payableRounded = Math.round(rawPayable); // Round to nearest integer
-    let lastDigit = payableRounded % 10;
-    let extraDiscount = lastDigit === 0 ? 0 : lastDigit;
-    let finalDiscount = totalTestRate - (payableRounded - extraDiscount);
-
-    // Apply final discount
-    const discountField = document.querySelector('#P423_LUMSUM');
-    if (discountField) {
-        discountField.value = finalDiscount;
-        discountField.dispatchEvent(new Event('change', { bubbles: true }));
-        discountField.dispatchEvent(new KeyboardEvent('keydown', {
-            bubbles: true,
-            cancelable: true,
-            key: 'Enter',
-            code: 'Enter',
-            keyCode: 13,
-            which: 13
-        }));
+        const remarkField = document.querySelector('#P423_INV_REMARK');
+        if (remarkField) {
+            remarkField.value = remarkText;
+        }
     }
 
-    const remarkField = document.querySelector('#P423_INV_REMARK');
-    if (remarkField) remarkField.value = `DISCOUNT BY DR (${selectedPercent}%)`;
-}
 
     // Function that creates the floating panel
     function createFloatingPanel() {
