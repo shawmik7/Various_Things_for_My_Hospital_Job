@@ -2,7 +2,7 @@
 // @name         Discount Calculator
 // @author       Sohanur Rahman Shawmik
 // @namespace    https://github.com/shawmik7/
-// @version      3.8
+// @version      3.9
 // @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
 // @match        http://192.168.1.1:8080/*
@@ -16,7 +16,7 @@
 
     const discountRules = {
         "vacuette": 0,
-        "blood  cbc": 0,
+        "cbc": 0,
         "dengue": 0,
         "bone merrow": 0,
         "bronchoscopy": 0,
