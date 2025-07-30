@@ -2,7 +2,7 @@
 // @name         Discount Calculator
 // @author       Sohanur Rahman Shawmik
 // @namespace    https://github.com/shawmik7/
-// @version      3.9
+// @version      4.0
 // @description  Calculates the discounts and automatically puts that in the discount field, in the web app of Comfort Diagnostic Centre Pvt. Ltd. Also adds the small changes (like 5 taka) to the discount to make the payable rounded to next 10
 // @match        http://115.127.77.187:8080/*
 // @match        http://192.168.1.1:8080/*
@@ -26,6 +26,7 @@
         "volt smear c c": 0,
         "h.v.s. for c/c": 0,
         "collection charge for nipple swap": 0,
+        "urgent charge": 0,
         "x-ray": 50,
         "usg": 50,
         "echo": 50,
@@ -35,7 +36,7 @@
         "uroflowmetry": 20
     };
 
-    const imagingTests = ["x-ray", "usg", "echo", "e.c.g", "e.e.g", "eeg"];
+    const imagingTests = ["x-ray", "usg", "echo", "e.c.g", "e.e.g", "eeg", "trans vaginal scan"];
     let lastSelectedPercent = null;
 
     function getSuffix(id) {
@@ -198,7 +199,7 @@
                 </div>
 
                 <div style="margin-top: 6px; padding: 4px; font-size: 9px; text-align: center; background: #f1f1f1; border: 1px solid #ccc; border-radius: 4px; color: #555;">
-                    Developed by <a href="https://github.com/shawmik7" target="_blank">shawmik7</a>
+                    Developed by: <a href="https://github.com/shawmik7/" target="_blank">shawmik7</a>
                 </div>
             </div>
         `;
