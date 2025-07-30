@@ -7,8 +7,8 @@
 // @match        http://115.127.77.187:8080/*
 // @match        http://192.168.1.1:8080/*
 // @grant        none
-// @updateURL    https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator.user.js
-// @downloadURL  https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator.user.js
+// @updateURL    https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator(discriptive_remark).user.js
+// @downloadURL  https://raw.githubusercontent.com/shawmik7/Various_Things_for_My_Hospital_Job/main/discount_calculator(discriptive_remark).user.js
 // ==/UserScript==
 
 (function () {
@@ -242,7 +242,7 @@
                 </div>
 
                 <div style="margin-top: 6px; padding: 4px; font-size: 9px; text-align: center; background: #f1f1f1; border: 1px solid #ccc; border-radius: 4px; color: #555;">
-                    Developed by <a href="https://github.com/shawmik7" target="_blank">shawmik7</a>
+                    Developed by: <a href="https://github.com/shawmik7/" target="_blank">shawmik7</a>
                 </div>
             </div>
         `;
